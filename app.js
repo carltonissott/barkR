@@ -1,10 +1,13 @@
 const path = require("path");
 
-const auth = require('./middleware/isAuth')
+const auth = require("./middleware/isAuth");
+const graphqlSchema = require("./graphql/schema");
+const graphqlResolver = require("./graphql/resolvers");
 
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const { graphqlHTTP } = require("express-graphql");
 const app = express();
 
 app.use(bodyParser.json());
@@ -24,6 +27,15 @@ app.use((req, res, next) => {
 });
 
 app.use(auth); //authorizes all requests
+
+app.use(
+  "/graphql",
+  graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolver,
+    graphiql: true,
+  })
+);
 
 app.use((error, req, res, next) => {
   //catches all errors thrown by next()
