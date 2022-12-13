@@ -9,8 +9,34 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { graphqlHTTP } = require("express-graphql");
 const app = express();
+const { v4: uuidv4 } = require("uuid");
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "images");
+  },
+  filename: function (req, file, cb) {
+    cb(null, uuidv4() + file.originalname);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
 
 app.use(bodyParser.json());
+
+app.use(multer({ storage: storage, fileFilter: fileFilter }).single("image"));
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use((req, res, next) => {
   //fixes COORs problem
@@ -27,6 +53,18 @@ app.use((req, res, next) => {
 });
 
 app.use(auth); //authorizes all requests
+
+app.post("/post-image", (req, res, next) => {
+  if (!req.isAuth) {
+    throw new Error("Not authenticated");
+  }
+  if (!req.file) {
+    return res.status(200).json({ message: "No file provided!" });
+  }
+  return res
+    .status(201)
+    .json({ message: "File stored!", filePath: req.file.path });
+});
 
 app.use(
   "/graphql",
