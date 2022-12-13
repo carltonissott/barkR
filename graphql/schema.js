@@ -11,6 +11,9 @@ schema{
 
 type RootQuery{
     login(email: String!, password:String!):AuthData!
+    user:User!
+    pet(id: String!):Pet!
+    getPets:[Pet]
 }
 
 type RootMutation{ 
@@ -24,28 +27,36 @@ type AuthData {
 }
 
 input UserInputData{
-    email: String!
-    name: String!
+    firstName: String!
+    lastName:String!
+    email:String!
     password: String!
 }
 
 input PetInputData{
     name:String!
-    description: String!
+    type:String!
+    phone:String!
 }
 
 type User{
     _id: ID!
-    name: String!
+    firstName: String!
+    lastName:String!
     email:String!
     password: String
+    pets: [Pet]
 }
 
 type Pet{
     _id: ID!
     name: String!
+    type: String!
+    breed: String
     creator: User!
-    description: String!
+    description: String
+    isLost: Boolean
+
 }
 
 

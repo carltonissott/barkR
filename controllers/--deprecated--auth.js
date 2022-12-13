@@ -11,7 +11,8 @@ exports.signup = async (req, res, next) => {
     throw error;
   }
   const email = req.body.email;
-  const name = req.body.name;
+  const firstName = req.body.firstName;
+  const lastName = req.body.lastName;
   const password = req.body.password;
 
   try {
@@ -20,7 +21,8 @@ exports.signup = async (req, res, next) => {
     const user = new User({
       email: email,
       password: hashedPw,
-      name: name,
+      firstName: firstName,
+      lastName: lastName,
     });
     const savedUser = await user.save();
 

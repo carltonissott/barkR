@@ -2,18 +2,23 @@ const mongoose = require('mongoose')
 
 const Schema = mongoose.Schema
 const petSchema = new Schema({
-    petName: {
+    name: {
         type:String,
         required:true
     },
-    description:{
+    type:{
+        type:String,
+        required:true
+    },
+
+    phone:{
         type:String,
         required:true
     },
     owner:{
         type:Schema.Types.ObjectId,
-        ref:"Users",
+        ref:"User",
         required:true
     }
 })
-module.exports = mongoose.model('Pets', petSchema)
+module.exports = mongoose.model('Pet', petSchema)

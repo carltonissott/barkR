@@ -11,14 +11,18 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
-  name: {
+  firstName: {
+    type: String,
+    required: true,
+  },
+  lastName: {
     type: String,
     required: true,
   },
   pets: [
     {
       type: Schema.Types.ObjectId,
-      ref: "Pets",
+      ref: "Pet",
     },
   ],
 });
