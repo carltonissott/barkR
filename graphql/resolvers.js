@@ -70,7 +70,7 @@ module.exports = {
     }
     const pet = await Pet.findById(id)
     return{
-      ...pet._doc
+      ...pet._doc, id: pet._id.toString(), image: ('http://localhost:8080/' + pet.image)
     }
 
   },
@@ -86,6 +86,7 @@ module.exports = {
       name: petInput.name,
       type: petInput.type,
       phone: petInput.phone,
+      image : petInput.image,
       owner: user,
     });
     const addedPet = await newPet.save();

@@ -72,7 +72,7 @@ app.use(
     schema: graphqlSchema,
     rootValue: graphqlResolver,
     graphiql: true,
-    formatError(err) {
+    customFormatError(err) {
       if (!err.originalError) {
         return err;
       }
@@ -93,10 +93,12 @@ app.use((error, req, res, next) => {
   res.status(status).json({ message: message, data: data });
 });
 
-mongoose //sets up connection to mongoDb
+mongoose
+  .set("strictQuery", false) //sets up connection to mongoDb
   .connect(
     "mongodb+srv://admin:carltonissott@cluster0.x9rpev1.mongodb.net/test"
   )
+
   .then((result) => {
     app.listen(8080);
   })

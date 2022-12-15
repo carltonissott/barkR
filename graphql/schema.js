@@ -37,6 +37,7 @@ input PetInputData{
     name:String!
     type:String!
     phone:String!
+    image: String!
 }
 
 type User{
@@ -52,6 +53,7 @@ type Pet{
     _id: ID!
     name: String!
     type: String!
+    image: String!
     breed: String
     creator: User!
     description: String
