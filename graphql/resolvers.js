@@ -60,7 +60,7 @@ module.exports = {
     }
     return { ...user._doc, _id: user._id.toString() };
   },
-  pet:async function({id},req){
+  pet: async function ({ id }, req) {
     if (!req.isAuth) {
       const error = new Error(
         "Not authenticated! Are you sure you're logged in?"
@@ -68,11 +68,12 @@ module.exports = {
       error.code = 401;
       throw error;
     }
-    const pet = await Pet.findById(id)
-    return{
-      ...pet._doc, id: pet._id.toString(), image: ('http://localhost:8080/' + pet.image)
-    }
-
+    const pet = await Pet.findById(id);
+    return {
+      ...pet._doc,
+      id: pet._id.toString(),
+      image: "http://localhost:8080/" + pet.image,
+    };
   },
   createPet: async function ({ petInput }, req) {
     //check if creator is auth
@@ -86,12 +87,29 @@ module.exports = {
       name: petInput.name,
       type: petInput.type,
       phone: petInput.phone,
-      image : petInput.image,
+      image: petInput.image,
+      description: petInput.description,
       owner: user,
     });
     const addedPet = await newPet.save();
     user.pets.push(addedPet);
     await user.save();
     return { ...addedPet._doc };
+  },
+  updatePet: async function ({ id, petInput }, req) {
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    const pet = await Pet.findById(id);
+    if (petInput.description) {
+      pet.description = petInput.description;
+    }
+    if (petInput.image) {
+      pet.image = petInput.image;
+    }
+    const updatedPet = await pet.save();
+    return { ...updatedPet._doc };
   },
 };

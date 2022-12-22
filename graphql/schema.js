@@ -19,6 +19,7 @@ type RootQuery{
 type RootMutation{ 
     createUser(userInput:UserInputData):User!
     createPet(petInput: PetInputData):Pet!
+    updatePet(id:String, petInput: PetUpdateData): Pet!
 }
 
 type AuthData {
@@ -33,11 +34,18 @@ input UserInputData{
     password: String!
 }
 
+input PetUpdateData{
+    name: String
+    description: String
+    image: String
+}
+
 input PetInputData{
     name:String!
     type:String!
     phone:String!
     image: String!
+    description: String!
 }
 
 type User{
