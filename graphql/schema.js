@@ -20,7 +20,18 @@ type RootMutation{
     createUser(userInput:UserInputData):User!
     createPet(petInput: PetInputData):Pet!
     updatePet(id:String, petInput: PetUpdateData): Pet!
+    updateUser(userInput:UserUpdateData):User!
 }
+
+input UserUpdateData{
+    firstName: String!
+    lastName:String!
+    email:String!
+    street: String!
+    zip: String!
+    tel:String!
+}
+
 
 type AuthData {
     token:String!
@@ -32,6 +43,10 @@ input UserInputData{
     lastName:String!
     email:String!
     password: String!
+    street: String!
+    city: String!
+    zip: String!
+    tel:String!
 }
 
 input PetUpdateData{
@@ -54,6 +69,10 @@ type User{
     lastName:String!
     email:String!
     password: String
+    street: String!
+    city: String!
+    zip: String!
+    tel: String!
     pets: [Pet]
 }
 
