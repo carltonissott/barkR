@@ -3,6 +3,7 @@ const Pet = require("../models/pets");
 const bcrypt = require("bcryptjs");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
+ObjectId = require("mongodb").ObjectId;
 
 //NEED TO ADD VALIDATION
 
@@ -14,6 +15,10 @@ module.exports = {
       firstName: userInput.firstName,
       lastName: userInput.lastName,
       password: securePassword,
+      street: userInput.street,
+      city: userInput.city,
+      zip: userInput.zip,
+      tel: userInput.tel,
     });
     const createUser = await newUser.save(); //saves as new in database
     return { ...createUser._doc, _id: createUser._id.toString() };
@@ -111,5 +116,59 @@ module.exports = {
     }
     const updatedPet = await pet.save();
     return { ...updatedPet._doc };
+  },
+  updateUser: async function ({ userInput }, req) {
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    const user = await User.findById(req.userId);
+    user.email = userInput.email;
+    user.firstName = userInput.firstName;
+    user.lastName = userInput.lastName;
+    user.street = userInput.street;
+    user.zip = userInput.zip;
+    user.tel = userInput.tel;
+    const updatedUser = await user.save();
+    return { ...updatedUser._doc };
+  },
+  deleteUser: async function ({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    await Pet.deleteMany({ owner: ObjectId(id) });
+    await User.findByIdAndDelete(id);
+    return true;
+  },
+  deletePet: async function ({ petId }, req) {
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    //check to make sure owner is the same owner
+    const pet = await Pet.findById(petId);
+
+    if (pet.owner.toString() !== req.userId) {
+      const error = new Error("Not your pet!");
+      error.code = 401;
+      throw error;
+    }
+    //delete pet from user
+
+    const user = await User.findById(req.userId);
+
+    const index = user.pets.findIndex((id) => id == petId);
+    user.pets.splice(index, 1);
+
+    const updatedUser= await user.save()
+
+    //delete pet from database
+    await Pet.findByIdAndDelete(petId);
+    
+    return true;
   },
 };

@@ -21,6 +21,8 @@ type RootMutation{
     createPet(petInput: PetInputData):Pet!
     updatePet(id:String, petInput: PetUpdateData): Pet!
     updateUser(userInput:UserUpdateData):User!
+    deleteUser(id:String!): Boolean
+    deletePet(petId:String!): Boolean
 }
 
 input UserUpdateData{
@@ -82,7 +84,7 @@ type Pet{
     type: String!
     image: String!
     breed: String
-    creator: User!
+    owner: User!
     description: String
     isLost: Boolean
 
