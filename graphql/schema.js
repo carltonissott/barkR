@@ -14,6 +14,7 @@ type RootQuery{
     user:User!
     pet(id: String!):Pet!
     getPets:[Pet]
+    lookupPet(id:String!):Pet!
 }
 
 type RootMutation{ 

@@ -164,11 +164,21 @@ module.exports = {
     const index = user.pets.findIndex((id) => id == petId);
     user.pets.splice(index, 1);
 
-    const updatedUser= await user.save()
+    const updatedUser = await user.save();
 
     //delete pet from database
     await Pet.findByIdAndDelete(petId);
-    
+
     return true;
+  },
+  lookupPet: async function ({ id }, req) {
+    try {
+      const pet = await Pet.findById(id);
+      return pet
+    } catch (error) {
+      const err = new Error("No pet found!");
+      err.code = 404;
+      throw err;
+    }
   },
 };
