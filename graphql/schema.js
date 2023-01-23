@@ -13,6 +13,7 @@ type RootQuery{
     login(email: String!, password:String!):AuthData!
     user:User!
     pet(id: String!):Pet!
+    content(id:String!):PetContent
     getPets:[Pet]
     lookupPet(id:String!):Pet!
 }
@@ -24,7 +25,23 @@ type RootMutation{
     updateUser(userInput:UserUpdateData):User!
     deleteUser(id:String!): Boolean
     deletePet(petId:String!): Boolean
+    updatePetContent(id:String!, content: PetContentInputData): PetContent
+
 }
+
+input PetContentInputData{
+    type:String!
+    bullets: [String]!
+}
+
+
+type PetContent{
+    _id: ID!
+    type: String!
+    bullets: [String]!
+    parent: Pet!
+}
+
 
 input UserUpdateData{
     firstName: String!
@@ -88,6 +105,7 @@ type Pet{
     owner: User!
     description: String
     isLost: Boolean
+    content: [PetContent]
 
 }
 

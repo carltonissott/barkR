@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Pet = require("../models/pets");
+const PetContent = require('../models/content')
 const bcrypt = require("bcryptjs");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
@@ -80,6 +81,20 @@ module.exports = {
       image: "http://localhost:8080/" + pet.image,
     };
   },
+  content: async function ({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error(
+        "Not authenticated! Are you sure you're logged in?"
+      );
+      error.code = 401;
+      throw error;
+    }
+    const content = await PetContent.findById(id);
+    return {
+      ...content._doc,
+      id: content._id.toString(),
+    };
+  },
   createPet: async function ({ petInput }, req) {
     //check if creator is auth
     if (!req.isAuth) {
@@ -101,6 +116,25 @@ module.exports = {
     await user.save();
     return { ...addedPet._doc };
   },
+
+  updatePetContent: async function ({id, content}, req){
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    const pet = await Pet.findById(id);
+    const newContent = new PetContent({
+      type: content.type,
+      bullets: content.bullets,
+      parent: pet
+    })
+    const addedContent = await newContent.save()
+    pet.content.push(addedContent)
+    await pet.save()
+    return {...addedContent._doc}
+  },
+
   updatePet: async function ({ id, petInput }, req) {
     if (!req.isAuth) {
       const error = new Error("not authenticated");
@@ -117,6 +151,9 @@ module.exports = {
     const updatedPet = await pet.save();
     return { ...updatedPet._doc };
   },
+
+
+
   updateUser: async function ({ userInput }, req) {
     if (!req.isAuth) {
       const error = new Error("not authenticated");
@@ -181,4 +218,5 @@ module.exports = {
       throw err;
     }
   },
+ 
 };

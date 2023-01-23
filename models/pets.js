@@ -27,5 +27,9 @@ const petSchema = new Schema({
     ref: "User",
     required: true,
   },
+  content:[{
+    type: Schema.Types.ObjectId,
+    ref: "PetContent"
+  }]
 });
 module.exports = mongoose.model("Pet", petSchema);
