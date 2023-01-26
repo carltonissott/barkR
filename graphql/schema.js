@@ -26,6 +26,7 @@ type RootMutation{
     deleteUser(id:String!): Boolean
     deletePet(petId:String!): Boolean
     updatePetContent(id:String!, content: PetContentInputData): PetContent
+    deleteContent(petId:String!, contentId:String!):Boolean
 
 }
 
@@ -73,6 +74,10 @@ input PetUpdateData{
     name: String
     description: String
     image: String
+    gender: String
+    birth: String
+    type:String
+    breed:String
 }
 
 input PetInputData{
@@ -80,7 +85,11 @@ input PetInputData{
     type:String!
     phone:String!
     image: String!
+    breed: String!
+    gender: String!
     description: String!
+    birth: String!
+
 }
 
 type User{
@@ -102,7 +111,9 @@ type Pet{
     type: String!
     image: String!
     breed: String
+    gender: String
     owner: User!
+    birth: String
     description: String
     isLost: Boolean
     content: [PetContent]

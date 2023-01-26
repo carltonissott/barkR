@@ -1,6 +1,6 @@
 const User = require("../models/user");
 const Pet = require("../models/pets");
-const PetContent = require('../models/content')
+const PetContent = require("../models/content");
 const bcrypt = require("bcryptjs");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
@@ -67,13 +67,13 @@ module.exports = {
     return { ...user._doc, _id: user._id.toString() };
   },
   pet: async function ({ id }, req) {
-    if (!req.isAuth) {
-      const error = new Error(
-        "Not authenticated! Are you sure you're logged in?"
-      );
-      error.code = 401;
-      throw error;
-    }
+    // if (!req.isAuth) {
+    //   const error = new Error(
+    //     "Not authenticated! Are you sure you're logged in?"
+    //   );
+    //   error.code = 401;
+    //   throw error;
+    // }
     const pet = await Pet.findById(id);
     return {
       ...pet._doc,
@@ -109,6 +109,9 @@ module.exports = {
       phone: petInput.phone,
       image: petInput.image,
       description: petInput.description,
+      gender: petInput.gender,
+      breed: petInput.breed,
+      birth: petInput.birth,
       owner: user,
     });
     const addedPet = await newPet.save();
@@ -117,22 +120,23 @@ module.exports = {
     return { ...addedPet._doc };
   },
 
-  updatePetContent: async function ({id, content}, req){
+  updatePetContent: async function ({ id, content }, req) {
     if (!req.isAuth) {
       const error = new Error("not authenticated");
       error.code = 401;
       throw error;
     }
     const pet = await Pet.findById(id);
+
     const newContent = new PetContent({
       type: content.type,
       bullets: content.bullets,
-      parent: pet
-    })
-    const addedContent = await newContent.save()
-    pet.content.push(addedContent)
-    await pet.save()
-    return {...addedContent._doc}
+      parent: pet,
+    });
+    const addedContent = await newContent.save();
+    pet.content.push(addedContent);
+    await pet.save();
+    return { ...addedContent._doc };
   },
 
   updatePet: async function ({ id, petInput }, req) {
@@ -142,17 +146,20 @@ module.exports = {
       throw error;
     }
     const pet = await Pet.findById(id);
-    if (petInput.description) {
+    if (petInput.name){
+      pet.name = petInput.name;
+      pet.gender = petInput.gender;
+      pet.birth = petInput.birth;
+      pet.breed = petInput.breed;
       pet.description = petInput.description;
     }
-    if (petInput.image) {
-      pet.image = petInput.image;
+    if (petInput.image){
+    pet.image = petInput.image;
+      
     }
     const updatedPet = await pet.save();
     return { ...updatedPet._doc };
   },
-
-
 
   updateUser: async function ({ userInput }, req) {
     if (!req.isAuth) {
@@ -200,7 +207,7 @@ module.exports = {
 
     const index = user.pets.findIndex((id) => id == petId);
     user.pets.splice(index, 1);
-
+    //update to the updateOne method, splice does not work
     const updatedUser = await user.save();
 
     //delete pet from database
@@ -208,15 +215,37 @@ module.exports = {
 
     return true;
   },
+  deleteContent: async function ({ petId, contentId }, req) {
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    const user = await User.findById(req.userId);
+    const pet = await Pet.findById(petId);
+    if (pet.owner.toString() !== req.userId) {
+      const error = new Error("Not your pet!");
+      error.code = 401;
+      throw error;
+    }
+
+    const updatedUser = await Pet.updateOne(
+      { _id: petId },
+      { $pull: { content: contentId } },
+      { safe: true, multi: false }
+    );
+
+    await PetContent.findByIdAndDelete(contentId);
+    return true;
+  },
   lookupPet: async function ({ id }, req) {
     try {
       const pet = await Pet.findById(id);
-      return pet
+      return pet;
     } catch (error) {
       const err = new Error("No pet found!");
       err.code = 404;
       throw err;
     }
   },
- 
 };
