@@ -14,10 +14,6 @@ const petSchema = new Schema({
     type: String,
     required: true,
   },
-  phone: {
-    type: String,
-    required: true,
-  },
   description: {
     type: String,
     required: true,
@@ -38,6 +34,14 @@ const petSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
+  },
+  emailNotification: {
+    type: Boolean,
+    required: false,
+  },
+  lost: {
+    type: Boolean,
+    required: false,
   },
   content: [
     {

@@ -16,6 +16,8 @@ type RootQuery{
     content(id:String!):PetContent
     getPets:[Pet]
     lookupPet(id:String!):Pet!
+    publicUser(petId: String!):User
+
 }
 
 type RootMutation{ 
@@ -27,12 +29,19 @@ type RootMutation{
     deletePet(petId:String!): Boolean
     updatePetContent(id:String!, content: PetContentInputData): PetContent
     deleteContent(petId:String!, contentId:String!):Boolean
-
+    updateNotification(petId: String!, content: PetNotificationData): Boolean
+    updateUserAddress(address: AddressUpdate!):Boolean
 }
 
 input PetContentInputData{
     type:String!
     bullets: [String]!
+}
+
+input AddressUpdate{
+    address: String!
+    lat: String!
+    long: String!
 }
 
 
@@ -64,10 +73,10 @@ input UserInputData{
     lastName:String!
     email:String!
     password: String!
-    street: String!
-    city: String!
-    zip: String!
-    tel:String!
+    address: String!
+    lat: String!
+    long: String!
+    tel: String!
 }
 
 input PetUpdateData{
@@ -80,11 +89,16 @@ input PetUpdateData{
     breed:String
 }
 
+input PetNotificationData{
+    lost: Boolean!
+    emailNotification: Boolean!
+}
+
 input PetInputData{
     name:String!
     type:String!
-    phone:String!
     image: String!
+    barkrid: String!
     breed: String!
     gender: String!
     description: String!
@@ -98,11 +112,15 @@ type User{
     lastName:String!
     email:String!
     password: String
-    street: String!
-    city: String!
-    zip: String!
+    street: String
+    city: String
+    zip: String
     tel: String!
     pets: [Pet]
+    membership: Boolean
+    lat: String!
+    long: String!
+    address:String!
 }
 
 type Pet{
@@ -115,10 +133,10 @@ type Pet{
     owner: User!
     birth: String
     description: String
-    isLost: Boolean
+    lost: Boolean
+    emailNotification: Boolean
     content: [PetContent]
-
-}
+}   
 
 
 

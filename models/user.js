@@ -21,20 +21,41 @@ const userSchema = new Schema({
   },
   street: {
     type: String,
-    required: true,
+    required: false,
   },
   city: {
     type: String,
-    required: true,
+    required: false,
   },
   zip: {
     type: String,
+    required: false,
+  },
+  tel: {
+    type: String,
     required: true,
   },
-  tel:{
-    type:String,
-    required:true,
+  stripeId: {
+    type: String,
+    required: true,
   },
+  membership: {
+    type: Boolean,
+    required: false,
+  },
+  lat: {
+    type: String,
+    required: true,
+  },
+  long: {
+    type: String,
+    required: true,
+  },
+  address: {
+    type: String,
+    required: true,
+  },
+
   pets: [
     {
       type: Schema.Types.ObjectId,

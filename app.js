@@ -1,8 +1,17 @@
 const path = require("path");
 
+const User = require("./models/user");
+const Pet = require("./models/pets")
+
+const nodemailer = require("nodemailer");
+
 const auth = require("./middleware/isAuth");
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
+
+const stripe = require("stripe")(
+  "sk_test_51MZ0QdIyEliCATcCym8HgUc0TBwNemt3QindmoBU9qEXyuL72tUjJAGi8r64UsPeOglkJoH7qLfMhbHMoEzdNWb900sqSATQve"
+);
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -64,6 +73,131 @@ app.post("/post-image", (req, res, next) => {
   return res
     .status(201)
     .json({ message: "File stored!", filePath: req.file.path });
+});
+
+app.post("/create-checkout-session", async (req, res, next) => {
+  const { priceId } = req.body;
+
+  const user = await User.findById(req.userId);
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    customer: user.stripeId,
+    line_items: [
+      {
+        price: priceId,
+        quantity: 1,
+      },
+    ],
+    success_url:
+      "http://localhost:3000/dashboard/myprofile?session_id={CHECKOUT_SESSION_ID}",
+    cancel_url: "http://localhost:3000/dashboard/myprofile",
+  });
+  return res.json({ url: session.url });
+});
+
+app.post("/webhook", async (req, res) => {
+  let data;
+  let eventType;
+  // Check if webhook signing is configured
+
+  data = req.body.data;
+  eventType = req.body.type;
+  const customer = data.object.customer;
+
+  let user = await User.findOne({
+    stripeId: customer,
+  });
+
+  switch (eventType) {
+    case "checkout.session.completed":
+      user.membership = true;
+
+      await user.save();
+
+      break;
+    case "invoice.paid":
+      user.membership = true;
+
+      await user.save();
+
+      break;
+    case "invoice.payment_failed":
+      user.membership = false;
+
+      await user.save();
+
+      break;
+    case "customer.subscription.paused":
+      user.membership = false;
+
+      await user.save();
+
+      break;
+
+    case "customer.subscription.deleted":
+      user.membership = false;
+
+      await user.save();
+
+      break;
+
+    default:
+    // Unhandled event type
+  }
+
+  res.sendStatus(200);
+});
+
+app.post("/customer-portal", async (req, res, next) => {
+  const user = await User.findById(req.userId);
+
+  const returnUrl = "http://localhost:3000/dashboard/myprofile";
+
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: user.stripeId,
+    return_url: returnUrl,
+  });
+  return res.json({ url: portalSession.url });
+});
+
+app.post("/email-notification", async (req, res, next) => {
+  let testAccount = await nodemailer.createTestAccount();
+
+
+  const { petId } = req.body;
+
+  console.log(req.ip)
+
+  const pet = await Pet.findById(petId)
+  const owner = await User.findById(pet.owner)
+
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: testAccount.user, // generated ethereal user
+      pass: testAccount.pass, // generated ethereal password
+    },
+  });
+
+  let info = await transporter.sendMail({
+    from: '"Fred Foo 👻" <foo@example.com>', // sender address
+    to: owner.email, // list of receivers
+    subject: "Hello ✔", // Subject line
+    text: `"Your pet has been scanned! ${req.ip}"`, // plain text body
+    html: "<b>Hello world?</b>", // html body
+  });
+
+  
+  console.log("Message sent: %s", info.messageId);
+  // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+
+  // Preview only available when sending through an Ethereal account
+  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+  // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 });
 
 app.use(

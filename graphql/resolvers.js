@@ -6,20 +6,31 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 ObjectId = require("mongodb").ObjectId;
 
+const stripe = require("stripe")(
+  "sk_test_51MZ0QdIyEliCATcCym8HgUc0TBwNemt3QindmoBU9qEXyuL72tUjJAGi8r64UsPeOglkJoH7qLfMhbHMoEzdNWb900sqSATQve"
+);
+
 //NEED TO ADD VALIDATION
 
 module.exports = {
   createUser: async function ({ userInput }, req) {
     const securePassword = await bcrypt.hash(userInput.password, 12);
+
+    const customer = await stripe.customers.create({
+      email: userInput.email,
+      name: userInput.firstName + " " + userInput.lastName,
+    });
+
     const newUser = new User({
       email: userInput.email,
       firstName: userInput.firstName,
       lastName: userInput.lastName,
       password: securePassword,
-      street: userInput.street,
-      city: userInput.city,
-      zip: userInput.zip,
-      tel: userInput.tel,
+      lat: userInput.lat,
+      long: userInput.long,
+      address: userInput.address,
+      stripeId: customer.id,
+      tel: userInput.tel
     });
     const createUser = await newUser.save(); //saves as new in database
     return { ...createUser._doc, _id: createUser._id.toString() };
@@ -81,6 +92,22 @@ module.exports = {
       image: "http://localhost:8080/" + pet.image,
     };
   },
+  publicUser: async function ({ petId }, req) {
+    const pet = await Pet.findById(petId);
+
+    const user = await User.findById(pet.owner);
+
+    console.log(pet);
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      tel: user.tel,
+      lat: user.lat,
+      long: user.long,
+      address: user.address,
+    };
+  },
+
   content: async function ({ id }, req) {
     if (!req.isAuth) {
       const error = new Error(
@@ -106,12 +133,12 @@ module.exports = {
     const newPet = new Pet({
       name: petInput.name,
       type: petInput.type,
-      phone: petInput.phone,
       image: petInput.image,
       description: petInput.description,
       gender: petInput.gender,
       breed: petInput.breed,
       birth: petInput.birth,
+      barkrid: petInput.barkrid,
       owner: user,
     });
     const addedPet = await newPet.save();
@@ -146,17 +173,36 @@ module.exports = {
       throw error;
     }
     const pet = await Pet.findById(id);
-    if (petInput.name){
+    if (petInput.name) {
       pet.name = petInput.name;
       pet.gender = petInput.gender;
       pet.birth = petInput.birth;
       pet.breed = petInput.breed;
       pet.description = petInput.description;
     }
-    if (petInput.image){
-    pet.image = petInput.image;
-      
+    if (petInput.image) {
+      pet.image = petInput.image;
     }
+    const updatedPet = await pet.save();
+    return { ...updatedPet._doc };
+  },
+
+  updateNotification: async function ({ petId, content }, req) {
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    const pet = await Pet.findById(petId);
+
+    if (pet.owner.toString() !== req.userId) {
+      const error = new Error("Not your pet!");
+      error.code = 401;
+      throw error;
+    }
+
+    pet.lost = content.lost;
+    pet.emailNotification = content.emailNotification;
     const updatedPet = await pet.save();
     return { ...updatedPet._doc };
   },
@@ -176,6 +222,20 @@ module.exports = {
     user.tel = userInput.tel;
     const updatedUser = await user.save();
     return { ...updatedUser._doc };
+  },
+
+  updateUserAddress: async function ({ address }, req) {
+    if (!req.isAuth) {
+      const error = new Error("not authenticated");
+      error.code = 401;
+      throw error;
+    }
+    const user = await User.findById(req.userId);
+    user.address = address.address;
+    user.lat = address.lat;
+    user.long = address.long;
+    const updatedUser = await user.save();
+    return true;
   },
   deleteUser: async function ({ id }, req) {
     if (!req.isAuth) {
